@@ -1,7 +1,7 @@
 Role Name
 =========
 
-Mounts a boot and root device as a filesystem mnt.
+Mounts a boot and root device as a filesystem mount on /mnt.
 
 Requirements
 ------------
@@ -11,8 +11,11 @@ None
 Role Variables
 --------------
 
-- boot_device_name -- Boot device name, available on /dev/.  (Default "sdc")
-- root_device_name: -- Root device name, available on /dev/. (Default "sdd")
+- boot_device_name -- Boot device name, available on /dev/.
+- root_device_name: -- Root device name, available on /dev/.
+- http_proxy: -- Http proxy setting to enable outbound internet connection.
+- https_proxy: -- Https proxy setting to enable outbound internet connection.
+- no_proxy: -- No proxy setting to enable outbound internet connection.
 
 Dependencies
 ------------
@@ -27,6 +30,9 @@ Example Playbook
   vars:
     boot_device_name: "sdc"
     root_device_name: "sdd"
+    http_proxy: "gatekeeper.company.org"
+    https_proxy: "gatekeeper.company.org"
+    https_proxy: "localhost,127.0.0.1,.company.org"
 
 License
 -------

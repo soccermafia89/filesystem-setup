@@ -1,0 +1,70 @@
+---
+
+- name: Unmount All Directories
+  mount:
+    name: "{{ item.name }}"
+    src: "{{ item.src }}"
+    fstype: "{{ item.fstype }}"
+    state: unmounted
+  sudo: True
+  with_items:
+   - { name: '/mnt/boot', src: '/dev/{{ boot_device_name }}1', fstype: 'ext2' }
+   - { name: '/mnt/dev/shm', src: 'tmpfs', fstype: 'tmpfs' }
+   - { name: '/mnt/dev/pts', src: 'devpts', fstype: 'devpts' }
+   - { name: '/mnt/dev', src: 'tmpfs', fstype: 'tmpfs' }
+   - { name: '/mnt/proc', src: 'proc', fstype: 'proc' }
+   - { name: '/mnt/sys', src: 'sysfs', fstype: 'sysfs' }
+   - { name: '/mnt', src: '/dev/{{ root_device_name }}', fstype: 'ext4' }
+
+- name: Ensure Work Directory
+  file: 
+    path: "/tmp/os_build_workdir" 
+    state: "directory"
+
+- name: Copy Dockerfile
+  template: 
+    src: "{{ build_os_distribution }}{{ build_os_version }}.Dockerfile" 
+    dest: "/tmp/os_build_workdir/Dockerfile"
+
+- name: Build Docker Container
+  command: /bin/bash -c "docker build -t {{ build_os_distribution }}{{ build_os_version }}_builder ."
+  sudo: True
+  args:
+    chdir: /tmp/os_build_workdir
+
+- name: Partition Boot Volume in Docker
+  command: /bin/bash -c "docker run --device=/dev/{{ boot_device_name }} --privileged --rm {{ build_os_distribution }}{{ build_os_version }}_builder bash -c \"( echo d; echo 1; echo d; echo 2; echo n; echo p; echo 1; echo ; echo +256M; echo n; echo p; echo 2; echo; echo; echo w;) | fdisk /dev/{{ boot_device_name }}\""
+  sudo: True
+
+- name: Check Boot Filesystem
+  command: /bin/bash -c "lsblk -o NAME,FSTYPE | grep {{ boot_device_name }}1 | tr -s ' ' | cut -d' ' -f2"
+  sudo: True  
+  register: boot_filesystem
+
+- name: Check Root Filesystem
+  command: /bin/bash -c "lsblk -o NAME,FSTYPE | grep {{ root_device_name }} | tr -s ' ' | cut -d' ' -f2"
+  sudo: True  
+  register: root_filesystem
+
+- name: Format Boot Filesystem on Boot Volume Boot Partition
+  command: /bin/bash -c "docker run --device=/dev/{{ boot_device_name }}1 --privileged --rm {{ build_os_distribution }}{{ build_os_version }}_builder bash -c \"yes y | mkfs.ext2 /dev/{{ boot_device_name }}1\""
+  sudo: True  
+  when: boot_filesystem.stdout != "ext2"
+
+- name: Format Root Filesystem
+  command: /bin/bash -c "docker run --device=/dev/{{ root_device_name }} --privileged --rm {{ build_os_distribution }}{{ build_os_version }}_builder bash -c \"yes y | mkfs.ext4 /dev/{{ root_device_name }}\""
+  sudo: True  
+  when: root_filesystem.stdout != "ext4"
+
+- name: Label Boot Partition
+  command: /bin/bash -c "e2label /dev/{{ boot_device_name }}1 '{{ partition_label_prefix }}bootfs'"
+  sudo: True
+
+# Using ansible's filesystem module fails for the swap partition.
+- name: Format Swap Filesystem on Boot Volume Swap Partition
+  command: /bin/bash -c "mkswap -L {{ partition_label_prefix }}swapfs /dev/{{ boot_device_name }}2"
+  sudo: True
+
+- name: Label Root Volume
+  command: /bin/bash -c "e2label /dev/{{ root_device_name }} '{{ partition_label_prefix }}rootfs'"
+  sudo: True
