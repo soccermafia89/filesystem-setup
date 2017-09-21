@@ -36,7 +36,7 @@ Example Playbook
     root_device_name: "sdd"
     http_proxy: "gatekeeper.company.org"
     https_proxy: "gatekeeper.company.org"
-    https_proxy: "localhost,127.0.0.1,.company.org"
+    no_proxy: "localhost,127.0.0.1,.company.org,/var/run/docker.sock"
     build_os_distribution: "centos"
     build_os_version: "7"
     partition_label_prefix: "organization"
