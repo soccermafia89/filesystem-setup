@@ -16,6 +16,8 @@ Role Variables
 - http_proxy: -- Http proxy setting to enable outbound internet connection.
 - https_proxy: -- Https proxy setting to enable outbound internet connection.
 - no_proxy: -- No proxy setting to enable outbound internet connection.
+- build_os_distribution: -- OS distribution to install on mounted filesystem.
+- build_os_version: -- OS version to install on mounted filesystem.
 
 Dependencies
 ------------
@@ -33,6 +35,8 @@ Example Playbook
     http_proxy: "gatekeeper.company.org"
     https_proxy: "gatekeeper.company.org"
     https_proxy: "localhost,127.0.0.1,.company.org"
+    build_os_distribution: "centos"
+    build_os_version: "7"
 
 License
 -------
