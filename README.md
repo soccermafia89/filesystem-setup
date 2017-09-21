@@ -1,7 +1,7 @@
 Role Name
 =========
 
-Mounts a boot and root device as a filesystem mount on /mnt.
+Reformats the filesystems on a boot and root device in preparation of being mounted by the chroot-mount role.
 
 Requirements
 ------------
