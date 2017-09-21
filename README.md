@@ -18,6 +18,7 @@ Role Variables
 - no_proxy: -- No proxy setting to enable outbound internet connection.
 - build_os_distribution: -- OS distribution to install on mounted filesystem.
 - build_os_version: -- OS version to install on mounted filesystem.
+- partition_label_prefix: -- Partition label to apply to filesystem.
 
 Dependencies
 ------------
@@ -25,6 +26,7 @@ Dependencies
 Example Playbook
 ----------------
 
+```
 - name: Mount Chroot
   hosts: localhost
   roles:
@@ -37,6 +39,8 @@ Example Playbook
     https_proxy: "localhost,127.0.0.1,.company.org"
     build_os_distribution: "centos"
     build_os_version: "7"
+    partition_label_prefix: "organization"
+```
 
 License
 -------
